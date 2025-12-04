@@ -37,6 +37,9 @@ cog predict -i audio=@interview.mp3 -i include_timestamps=true
 # Ask questions about the audio content
 cog predict -i audio=@lecture.wav -i llm_prompt="Summarize the main points from this lecture in bullet points"
 
+# Pull straight from YouTube
+cog predict -i youtube_url="https://youtu.be/dQw4w9WgXcQ" -i include_timestamps=false
+
 # Extract specific information
 cog predict -i audio=@meeting.wav -i llm_prompt="What are the action items from this meeting?"
 
@@ -50,12 +53,37 @@ cog predict -i audio=@podcast.mp3 -i include_timestamps=false
 cog predict -i audio=@conference_call.wav -i llm_prompt="Create a summary with speaker names and key decisions made"
 ```
 
+## Build once and reuse (avoids rebuilds)
+
+```bash
+# Build the image once
+cog build -t canary-qwen-local
+
+# Run using the built image
+cog predict canary-qwen-local -i youtube_url="https://youtu.be/dQw4w9WgXcQ" -i include_timestamps=false
+```
+
+Add a shell helper (e.g., in `~/.bashrc`) to paste a YouTube URL and copy the transcript with `clip.exe` (WSL/Windows):
+
+```bash
+transcribe() {
+  local url="$1"
+  if [ -z "$url" ]; then
+    echo "usage: transcribe <youtube_url>"
+    return 1
+  fi
+  (cd ~/code/forks/cog-nvidia-canary-qwen-2.5b && cog predict canary-qwen-local -i youtube_url="$url" -i include_timestamps=false) | clip.exe
+}
+```
+
 ## All the parameters
 
-- `audio` - Your audio file (supports MP3, WAV, M4A, FLAC, OGG, AAC - up to 2 hours)
+- `audio` - Your audio file (supports MP3, WAV, M4A, FLAC, OGG, AAC - up to 4 hours)
+- `youtube_url` - Paste a YouTube link to download and transcribe (same 4-hour limit)
 - `llm_prompt` - Question or instruction for analyzing the transcript (optional)
 - `include_timestamps` - Add time markers to transcript (default: true)  
 - `show_confidence` - Include the model's reasoning process (default: false)
+- To copy to your clipboard, pipe the output to your host tool (e.g., `| clip.exe` on Windows or `| pbcopy` on macOS)
 
 ## What you need
 
@@ -92,7 +120,7 @@ English only. While the underlying components were trained on some other languag
 ## Limitations
 
 - English only
-- 2 hours max per file
+- 4 hours max per file or YouTube audio
 - Works best with clear conversational speech
 - Analysis prompts work best with transcripts under 1000 words
 

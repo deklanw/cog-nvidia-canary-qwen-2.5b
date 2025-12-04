@@ -10,3 +10,5 @@ soundfile
 cog
 # NeMo toolkit from source with ASR support
 nemo_toolkit[asr] @ git+https://github.com/NVIDIA/NeMo.git
+# YouTube download support
+yt-dlp
